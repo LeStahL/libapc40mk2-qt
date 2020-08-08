@@ -9,7 +9,7 @@ set(CMAKE_AUTOMOC ON)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "C:\\Qt\\5.15.0\\msvc2019_64\\")
 
-find_package(Qt5 COMPONENTS Core Gui Widgets)
+find_package(Qt5 COMPONENTS Core Widgets)
 find_package(Git QUIET)
 
 # Add QMidi submodule
@@ -27,20 +27,43 @@ if(${GIT_FOUND} AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     endif()
 endif()
 
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/repo/CMakeLists.txt")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/thirdparty/QMidi/CMakeLists.txt")
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif()
 
-# Make sure all source files are present to avoid obscure compiler errors.
-set(SOURCES
-    "${CMAKE_SOURCE_DIR}/hack.cpp"
+add_subdirectory(thirdparty/QMidi)
+
+# # Make sure all source files are present to avoid obscure compiler errors.
+set(${PROJECT_NAME}_SOURCES
+    "${PROJECT_SOURCE_DIR}/src/MidiController.cpp"
+    "${PROJECT_SOURCE_DIR}/src/ValueControl.cpp"
+    "${PROJECT_SOURCE_DIR}/src/AkaiAPC40MkII.cpp"
 )
-foreach(FILE ${HACK_SOURCES})
+foreach(FILE ${${PROJECT_NAME}_SOURCES})
     if(NOT EXISTS "${FILE}")
         message(FATAL_ERROR "File ${FILE} does not exist.")
     endif()
 endforeach()
 
-# Add executable
-add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Gui Qt5::Widgets)
+# Add library
+add_library(${PROJECT_NAME} OBJECT ${${PROJECT_NAME}_SOURCES})
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
+target_include_directories(${PROJECT_NAME} PRIVATE 
+    "${PROJECT_SOURCE_DIR}/src"
+    "${PROJECT_SOURCE_DIR}/thirdparty/QMidi/src"
+    ${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Widgets_INCLUDE_DIRS}
+)
+
+set(LIBRARIES
+    Qt5::Core
+    Qt5::Widgets
+    QMidi_static
+)
+
+# Link static and shared version
+add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}>)
+target_link_libraries(${PROJECT_NAME}_shared ${LIBRARIES})
+
+add_library(${PROJECT_NAME}_static STATIC $<TARGET_OBJECTS:${PROJECT_NAME}>)
+target_link_libraries(${PROJECT_NAME}_static ${LIBRARIES})
