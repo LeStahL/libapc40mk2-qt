@@ -52,7 +52,6 @@ add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 set(LIBRARIES
     Qt5::Core
     Qt5::Widgets
-    QMidi_static
 )
 
 # Link static and shared version
