@@ -46,14 +46,8 @@ foreach(FILE ${${PROJECT_NAME}_SOURCES})
 endforeach()
 
 # Add library
-add_library(${PROJECT_NAME} OBJECT ${${PROJECT_NAME}_SOURCES})
-set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
-target_include_directories(${PROJECT_NAME} PRIVATE 
-    "${PROJECT_SOURCE_DIR}/src"
-    "${PROJECT_SOURCE_DIR}/thirdparty/QMidi/src"
-    ${Qt5Core_INCLUDE_DIRS}
-    ${Qt5Widgets_INCLUDE_DIRS}
-)
+include_directories(${PROJECT_NAME} "thirdparty/QMidi/src")
+add_library(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 
 set(LIBRARIES
     Qt5::Core
@@ -62,8 +56,4 @@ set(LIBRARIES
 )
 
 # Link static and shared version
-add_library(${PROJECT_NAME}_shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}>)
-target_link_libraries(${PROJECT_NAME}_shared ${LIBRARIES})
-
-add_library(${PROJECT_NAME}_static STATIC $<TARGET_OBJECTS:${PROJECT_NAME}>)
-target_link_libraries(${PROJECT_NAME}_static ${LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
